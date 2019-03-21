@@ -232,7 +232,11 @@ func pullRequestsToReleaseNotes(
 			}
 		}
 
-		note.Markdown = fmt.Sprintf("%s ([%d](%s) by [%s](%s))", note.Text, note.PRNumber, note.PRURL, note.Author, note.AuthorURL)
+		servicesMarkdown := ""
+		if len(note.Services) > 0 {
+			servicesMarkdown = "**" + strings.Join(note.Services, ", ") + ":** "
+		}
+		note.Markdown = fmt.Sprintf("%s%s ([%d](%s) by [%s](%s))", servicesMarkdown, note.Text, note.PRNumber, note.PRURL, note.Author, note.AuthorURL)
 
 		notes = append(notes, note)
 	}
