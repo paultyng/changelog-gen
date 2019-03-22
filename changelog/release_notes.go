@@ -3,6 +3,8 @@ package changelog
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
@@ -236,7 +238,39 @@ func pullRequestsToReleaseNotes(
 	return notes, nil
 }
 
+var bodyREs = []*regexp.Regexp{
+	regexp.MustCompile("```release-note\n(?P<note>.+)\n```"),
+	regexp.MustCompile("```releasenote\n(?P<note>.+)\n```"),
+}
+
 func textFromPR(title, body string) string {
+	for _, re := range bodyREs {
+		match := re.FindStringSubmatch(body)
+		if len(match) == 0 {
+			continue
+		}
+
+		note := ""
+		for i, name := range re.SubexpNames() {
+			if name == "note" {
+				note = match[i]
+				break
+			}
+		}
+
+		note = strings.TrimRight(note, "\r")
+		note = stripMarkdownBullet(note)
+
+		if note != "" {
+			return note
+		}
+	}
+
 	// TODO: add body parsing
 	return title
+}
+
+func stripMarkdownBullet(note string) string {
+	re := regexp.MustCompile(`(?i)\*\s`)
+	return re.ReplaceAllString(note, "")
 }
