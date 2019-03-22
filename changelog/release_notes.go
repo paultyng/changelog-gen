@@ -12,6 +12,7 @@ import (
 const (
 	labelBug            = "bug"
 	labelBreakingChange = "breaking-change"
+	labelNoChangelog    = "no-changelog"
 )
 
 // ReleaseNote is the type that represents the total sum of all the information
@@ -67,6 +68,11 @@ func listPullRequestIDs(
 
 								AssociatedPullRequests struct {
 									Nodes []struct {
+										Labels struct {
+											Nodes []struct {
+												Name string
+											}
+										} `graphql:"labels(first: 100)"`
 										BaseRef struct {
 											Repository struct {
 												Owner struct {
@@ -130,6 +136,18 @@ func listPullRequestIDs(
 				prn.BaseRef.Repository.Name != repo ||
 				prn.BaseRef.Repository.Owner.Login != owner {
 				logger.Debug("external PR, skipping")
+				continue
+			}
+
+			noChangelog := false
+			for _, ln := range prn.Labels.Nodes {
+				if ln.Name == labelNoChangelog {
+					noChangelog = true
+					break
+				}
+			}
+			if noChangelog {
+				logger.Debug("no-changelog label applied, skipping")
 				continue
 			}
 
