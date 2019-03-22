@@ -22,7 +22,7 @@ func main() {
 
 	ctx := context.Background()
 	logger := hclog.New(&hclog.LoggerOptions{
-		Level:  hclog.Debug,
+		Level:  hclog.Info,
 		Output: os.Stderr,
 	})
 	client := githubClient(ctx)
@@ -30,7 +30,7 @@ func main() {
 	repo := "terraform-provider-aws"
 	branch := "master"
 
-	cl, err := changelog.BuildChangelog(ctx, client, logger, org, repo, branch, releaseStart1_59_0, releaseEnd1_59_0)
+	cl, err := changelog.BuildChangelog(ctx, client, logger, "", "", org, repo, branch, releaseStart1_59_0, releaseEnd1_59_0)
 	if err != nil {
 		panic(err)
 	}
