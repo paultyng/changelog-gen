@@ -12,7 +12,7 @@ import (
 const (
 	labelBug            = "bug"
 	labelBreakingChange = "breaking-change"
-	labelNoChangelog    = "no-changelog"
+	labelNoReleaseNote  = "no-release-note"
 )
 
 // ReleaseNote is the type that represents the total sum of all the information
@@ -141,7 +141,7 @@ func listPullRequestIDs(
 
 			noChangelog := false
 			for _, ln := range prn.Labels.Nodes {
-				if ln.Name == labelNoChangelog {
+				if ln.Name == labelNoReleaseNote {
 					noChangelog = true
 					break
 				}
