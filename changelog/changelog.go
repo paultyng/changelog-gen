@@ -46,28 +46,3 @@ func BuildChangelog(
 
 	return renderChangelog(changelogTemplate, releaseNoteTemplate, notes)
 }
-
-func filterReleaseNotes(notes []ReleaseNote, filter func(ReleaseNote) bool) []ReleaseNote {
-	if filter == nil {
-		filtered := notes
-		notes = []ReleaseNote{}
-		return filtered
-	}
-
-	filtered := []ReleaseNote{}
-	unfiltered := []ReleaseNote{}
-	for _, n := range notes {
-		if filter(n) {
-			filtered = append(filtered, n)
-			continue
-		}
-		unfiltered = append(unfiltered, n)
-	}
-
-	notes = unfiltered
-
-	sort.Slice(filtered, func(i, j int) bool {
-		return filtered[i].PRDate.After(filtered[j].PRDate)
-	})
-	return filtered
-}
