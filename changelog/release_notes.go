@@ -268,8 +268,9 @@ func stripMarkdownBullet(note string) string {
 }
 
 var authorInBodyREs = []*regexp.Regexp{
-	regexp.MustCompile("(?m)^/cc @(?P<login>.+)"),
-	regexp.MustCompile("(?m)^(\\*\\*)?Original Author:(\\*\\*)? @(?P<login>.+)"),
+	// /cc syntax is too ambiguous probably
+	// regexp.MustCompile("(?m)^/[Cc][Cc] *@(?P<login>.+)"),
+	regexp.MustCompile("(?m)^(\\*\\*)?[Oo]riginal [Aa]uthor:(\\*\\*)? *@(?P<login>.+)"),
 }
 
 func authorFromPR(body string) (string, string, bool) {

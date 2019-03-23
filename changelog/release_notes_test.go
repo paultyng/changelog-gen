@@ -42,8 +42,9 @@ func TestAuthorFromPR(t *testing.T) {
 		// zero case
 		{"", ""},
 
-		{"foo", "/cc @foo"},
-		{"foo", "\n/cc @foo\n"},
+		{"foo", "original author: @foo"},
+		{"foo", "original author:@foo"},
+		{"foo", "original author:     @foo"},
 		{"foo", "Original Author: @foo"},
 		{"foo", "**Original Author:** @foo"},
 		{"foo", "\n**Original Author:** @foo\n"},
