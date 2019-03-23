@@ -53,11 +53,8 @@ func listPullRequestIDs(
 	ctx context.Context,
 	client *githubv4.Client,
 	logger hclog.Logger,
-	owner,
-	repo,
-	branch,
-	start,
-	end string,
+	owner, repo, branch string,
+	start, end time.Time,
 ) ([]string, error) {
 	var q struct {
 		Repository struct {
@@ -100,25 +97,15 @@ func listPullRequestIDs(
 
 	prNodeIDs := map[string]bool{}
 
-	since, err := time.Parse(time.RFC3339, start)
-	if err != nil {
-		return nil, err
-	}
-
-	until, err := time.Parse(time.RFC3339, end)
-	if err != nil {
-		return nil, err
-	}
-
-	logger = logger.With("since", since, "until", until)
+	logger = logger.With("since", start, "until", end)
 
 	logger.Info("checking commits for associated PRs")
-	err = client.Query(ctx, &q, map[string]interface{}{
+	err := client.Query(ctx, &q, map[string]interface{}{
 		"repoOwner": githubv4.String(owner),
 		"repoName":  githubv4.String(repo),
 		"ref":       githubv4.String(fmt.Sprintf("refs/heads/%s", branch)),
-		"since":     githubv4.GitTimestamp{Time: since},
-		"until":     githubv4.GitTimestamp{Time: until},
+		"since":     githubv4.GitTimestamp{Time: start},
+		"until":     githubv4.GitTimestamp{Time: end},
 	})
 	if err != nil {
 		return nil, err
