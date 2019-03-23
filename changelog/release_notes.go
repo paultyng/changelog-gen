@@ -212,12 +212,18 @@ func pullRequestsToReleaseNotes(
 
 		logger.Info("building release note")
 
+		author, authorURL, found := authorFromPR(n.PullRequest.Body)
+		if !found {
+			author = n.PullRequest.Author.Login
+			authorURL = n.PullRequest.Author.URL
+		}
+
 		note := ReleaseNote{
 			PRDate:    n.PullRequest.MergedAt,
 			PRNumber:  n.PullRequest.Number,
 			PRURL:     n.PullRequest.URL,
-			Author:    n.PullRequest.Author.Login,
-			AuthorURL: n.PullRequest.Author.URL,
+			Author:    author,
+			AuthorURL: authorURL,
 			Text:      textFromPR(n.PullRequest.Title, n.PullRequest.Body),
 		}
 
@@ -238,13 +244,13 @@ func pullRequestsToReleaseNotes(
 	return notes, nil
 }
 
-var bodyREs = []*regexp.Regexp{
-	regexp.MustCompile("```release-note\n(?P<note>.+)\n```"),
-	regexp.MustCompile("```releasenote\n(?P<note>.+)\n```"),
+var textInBodyREs = []*regexp.Regexp{
+	regexp.MustCompile("(?m)^```release-note\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```releasenote\n(?P<note>.+)\n```"),
 }
 
 func textFromPR(title, body string) string {
-	for _, re := range bodyREs {
+	for _, re := range textInBodyREs {
 		match := re.FindStringSubmatch(body)
 		if len(match) == 0 {
 			continue
@@ -266,11 +272,41 @@ func textFromPR(title, body string) string {
 		}
 	}
 
-	// TODO: add body parsing
 	return title
 }
 
 func stripMarkdownBullet(note string) string {
 	re := regexp.MustCompile(`(?i)\*\s`)
 	return re.ReplaceAllString(note, "")
+}
+
+var authorInBodyREs = []*regexp.Regexp{
+	regexp.MustCompile("(?m)^/cc @(?P<login>.+)"),
+	regexp.MustCompile("(?m)^(\\*\\*)?Original Author:(\\*\\*)? @(?P<login>.+)"),
+}
+
+func authorFromPR(body string) (string, string, bool) {
+	for _, re := range authorInBodyREs {
+		match := re.FindStringSubmatch(body)
+		if len(match) == 0 {
+			continue
+		}
+
+		author := ""
+		for i, name := range re.SubexpNames() {
+			if name == "login" {
+				author = match[i]
+				break
+			}
+		}
+
+		author = strings.TrimLeft(author, "@")
+
+		if author != "" {
+			authorURL := fmt.Sprintf("https://github.com/%s", author)
+			return author, authorURL, true
+		}
+	}
+
+	return "", "", false
 }
