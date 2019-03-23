@@ -12,9 +12,12 @@ import (
 )
 
 const (
-	labelBug            = "bug"
 	labelBreakingChange = "breaking-change"
-	labelNoReleaseNote  = "no-release-note"
+)
+
+var (
+	labelsBug           = []string{"bug", "kind/bug"}
+	labelsNoReleaseNote = []string{"no-release-note", "release-note-none"}
 )
 
 // ReleaseNote is the type that represents the total sum of all the information
@@ -130,9 +133,11 @@ func listPullRequestIDs(
 
 			noChangelog := false
 			for _, ln := range prn.Labels.Nodes {
-				if ln.Name == labelNoReleaseNote {
-					noChangelog = true
-					break
+				for _, nrn := range labelsNoReleaseNote {
+					if ln.Name == nrn {
+						noChangelog = true
+						break
+					}
 				}
 			}
 			if noChangelog {
@@ -155,6 +160,15 @@ func listPullRequestIDs(
 	}
 
 	return prIDs, nil
+}
+
+func stringInSlice(haystack []string, needle string) bool {
+	for _, h := range haystack {
+		if h == needle {
+			return true
+		}
+	}
+	return false
 }
 
 func pullRequestsToReleaseNotes(
@@ -216,7 +230,7 @@ func pullRequestsToReleaseNotes(
 
 		for _, ln := range n.PullRequest.Labels.Nodes {
 			switch {
-			case ln.Name == labelBug:
+			case stringInSlice(labelsBug, ln.Name):
 				note.Bug = true
 			case ln.Name == labelBreakingChange:
 				note.BreakingChange = true
@@ -237,6 +251,7 @@ var textInBodyREs = []*regexp.Regexp{
 }
 
 func textFromPR(title, body string) string {
+	text := title
 	for _, re := range textInBodyREs {
 		match := re.FindStringSubmatch(body)
 		if len(match) == 0 {
@@ -255,11 +270,13 @@ func textFromPR(title, body string) string {
 		note = stripMarkdownBullet(note)
 
 		if note != "" {
-			return note
+			text = note
 		}
 	}
 
-	return title
+	text = strings.TrimSpace(text)
+
+	return text
 }
 
 func stripMarkdownBullet(note string) string {

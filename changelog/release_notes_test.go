@@ -44,7 +44,7 @@ func TestAuthorFromPR(t *testing.T) {
 
 		{"foo", "original author: @foo"},
 		{"foo", "original author:@foo"},
-		{"foo", "original author:     @foo"},
+		{"foo", "original author:      @foo"},
 		{"foo", "Original Author: @foo"},
 		{"foo", "**Original Author:** @foo"},
 		{"foo", "\n**Original Author:** @foo\n"},
