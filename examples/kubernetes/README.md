@@ -1,4 +1,4 @@
-# Generate Kubernetes Style Changelog
+# Generate Kubernetes Changelog
 
 ```shell
 $ changelog-gen \

@@ -20,6 +20,8 @@ The following flags are supported:
 * **-owner** repository owner, environment variable: `GITHUB_OWNER`
 * **-repo** repository name, environment variable: `GITHUB_NAME`
 * **-branch** branch, defaults to `master`, environment variable: `GITHUB_BRANCH`
+* **-changelog** Go template for changelog generation. The model is a slice of `ReleaseNote`.
+* **-releasenote** Go template for an individual release note. The model is a single `ReleaseNote`.
 
 In addition to flags you must also supply either 2 commit shas or 2 RFC3339 timestamps indicating the portion of the commit log to pull PRs for.
 
@@ -43,4 +45,4 @@ If no author information is found, it defaults to the PR author.
 
 ## Templating
 
-Only the internal template is supported currently.
+[Sprig](http://masterminds.github.io/sprig/) is used to provide additional templating functions. See the [built-in](changelog/template.go) examples, or additional ones under [examples](./examples).
