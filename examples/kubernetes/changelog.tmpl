@@ -1,0 +1,43 @@
+{{- $breaking := newStringList -}}
+{{- $features := newStringList -}}
+{{- $improvements := newStringList -}}
+{{- $bugs := newStringList -}}
+{{- range . -}}
+  {{if .BreakingChange -}}
+	{{$breaking = append $breaking (renderReleaseNote .) -}}
+  {{else if or (has "new-resource" .Labels) (has "new-data-source" .Labels) -}}
+	{{$features = append $features (renderReleaseNote .) -}}
+  {{else if not .Bug -}}
+	{{$improvements = append $improvements (renderReleaseNote .) -}}
+  {{else -}}
+	{{$bugs = append $bugs (renderReleaseNote .) -}}
+  {{end -}}
+{{- end -}}
+{{- if gt (len $breaking) 0 -}}
+BREAKING CHANGES
+
+{{range $breaking | sortAlpha -}}
+* {{.}}
+{{end -}}
+{{- end -}}
+{{- if gt (len $features) 0}}
+FEATURES
+
+{{range $features | sortAlpha -}}
+* {{.}}
+{{end -}}
+{{- end -}}
+{{- if gt (len $improvements) 0}}
+IMPROVEMENTS
+
+{{range $improvements | sortAlpha -}}
+* {{.}}
+{{end -}}
+{{- end -}}
+{{- if gt (len $bugs) 0}}
+BUGS
+
+{{range $bugs | sortAlpha -}}
+* {{.}}
+{{end -}}
+{{- end -}}
