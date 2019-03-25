@@ -12,7 +12,8 @@ $ changelog-gen \
   441ec74e66706cc0a75d4d207724cd6460f5f6a4 \
   f3bdfeaaa7ddd9522c549e9f134948e0d698ab02
 ```
-([example output](https://gist.github.com/paultyng/373566df174f8febfbff1f7cf21a238c#file-changelog-md))
+
+See [examples](./examples) for additional examples of usage and output.
 
 The following flags are supported:
 
