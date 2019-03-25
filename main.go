@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"time"
@@ -17,10 +18,15 @@ import (
 )
 
 type options struct {
+	// required
 	githubToken string
 	owner       string
 	repo        string
-	branch      string
+
+	// optional
+	branch              string
+	changelogTemplate   string
+	releaseNoteTemplate string
 }
 
 func envString(key, def string) string {
@@ -57,6 +63,18 @@ func parseOptions(args []string) ([]string, *options, error) {
 			envString("GITHUB_BRANCH", "master"),
 			"Github branch (defaults to master)",
 		)
+
+		flChangelogTemplate = flagset.String(
+			"changelog",
+			"",
+			"Changelog template path (leave blank for built-in template)",
+		)
+
+		flReleaseNoteTemplate = flagset.String(
+			"releasenote",
+			"",
+			"Release note template path (leave blank for built-in template)",
+		)
 	)
 
 	if err := flagset.Parse(args); err != nil {
@@ -79,7 +97,10 @@ func parseOptions(args []string) ([]string, *options, error) {
 		githubToken: *flGitHubToken,
 		owner:       *flOwner,
 		repo:        *flRepo,
-		branch:      *flBranch,
+
+		branch:              *flBranch,
+		changelogTemplate:   *flChangelogTemplate,
+		releaseNoteTemplate: *flReleaseNoteTemplate,
 	}, nil
 }
 
@@ -96,6 +117,19 @@ func parseCommitOrTime(v string) (string, time.Time, error) {
 	return "", t, nil
 }
 
+func loadTemplate(filename string) (string, error) {
+	if filename == "" {
+		return "", nil
+	}
+
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
+}
+
 func main() {
 	logger := hclog.New(&hclog.LoggerOptions{
 		// TODO: load level from somewhere else?
@@ -110,6 +144,21 @@ func main() {
 		}
 		if len(args) != 2 {
 			return errors.New("2 arguments are required")
+		}
+
+		branch := opts.branch
+		if branch == "" {
+			branch = "master"
+		}
+
+		changelogTemplate, err := loadTemplate(opts.changelogTemplate)
+		if err != nil {
+			return err
+		}
+
+		releaseNoteTemplate, err := loadTemplate(opts.releaseNoteTemplate)
+		if err != nil {
+			return err
 		}
 
 		ctx := context.Background()
@@ -139,9 +188,8 @@ func main() {
 
 		cl, err := changelog.BuildChangelog(
 			ctx, client, logger,
-			// TODO: load override templates from files somewhere
-			"", "",
-			opts.owner, opts.repo, opts.branch,
+			changelogTemplate, releaseNoteTemplate,
+			opts.owner, opts.repo, branch,
 			startTime, endTime,
 		)
 		if err != nil {
