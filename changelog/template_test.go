@@ -119,7 +119,7 @@ func TestRender_defaultReleaseNoteTemplate(t *testing.T) {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			actual, err := renderReleaseNoteFunc(defaultReleaseNoteTemplate)(c.rn)
 			assert.NoError(t, err)
-			assert.Equal(t, c.expected, string(actual))
+			assert.Equal(t, c.expected, actual)
 		})
 	}
 }

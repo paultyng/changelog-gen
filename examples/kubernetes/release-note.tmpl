@@ -1,1 +1,1 @@
-{{with .Labels | filterPrefix "area/" true | sortAlpha }}{{if len . | lt 0 }}**{{. | join ", " }}:** {{end}}{{end}}{{.Text | raw}} ([{{.PRNumber}}]({{.PRURL}}) by [{{.Author}}]({{.AuthorURL}}))
+{{with .Labels | filterPrefix "area/" true | sortAlpha }}{{if len . | lt 0 }}**{{. | join ", " }}:** {{end}}{{end}}{{.Text }} ([{{.PRNumber}}]({{.PRURL}}) by [{{.Author}}]({{.AuthorURL}}))
