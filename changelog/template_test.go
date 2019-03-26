@@ -20,7 +20,7 @@ FEATURES
 
 IMPROVEMENTS
 
-* this is an improvement ([0]() by []())
+* this is an improvement & 'stuff' ([0]() by []())
 
 BUGS
 
@@ -46,7 +46,7 @@ BUGS
 			Text:   "this is a new data-source",
 		},
 		{
-			Text: "this is an improvement",
+			Text: "this is an improvement & 'stuff'",
 		},
 		{
 			Bug:  true,
@@ -62,6 +62,20 @@ func TestRender_defaultReleaseNoteTemplate(t *testing.T) {
 		expected string
 		rn       ReleaseNote
 	}{
+		{"bar ([2](baz) by [qux](quux))", ReleaseNote{
+			Text:      "bar",
+			PRNumber:  2,
+			PRURL:     "baz",
+			Author:    "qux",
+			AuthorURL: "quux",
+		}},
+		{"bar 'apos' ([2](baz) by [qux](quux))", ReleaseNote{
+			Text:      "bar 'apos'",
+			PRNumber:  2,
+			PRURL:     "baz",
+			Author:    "qux",
+			AuthorURL: "quux",
+		}},
 		{"bar ([2](baz) by [qux](quux))", ReleaseNote{
 			Text:      "bar",
 			PRNumber:  2,
@@ -105,7 +119,7 @@ func TestRender_defaultReleaseNoteTemplate(t *testing.T) {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			actual, err := renderReleaseNoteFunc(defaultReleaseNoteTemplate)(c.rn)
 			assert.NoError(t, err)
-			assert.Equal(t, c.expected, actual)
+			assert.Equal(t, c.expected, string(actual))
 		})
 	}
 }

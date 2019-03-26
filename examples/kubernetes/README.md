@@ -19,7 +19,7 @@ IMPROVEMENTS
 * **apiserver:** Remove storage versions flag ([67678](https://github.com/kubernetes/kubernetes/pull/67678) by [caesarxuchao](https://github.com/caesarxuchao))
 * **kubectl:** add kustomize as a subcommand in kubectl ([73033](https://github.com/kubernetes/kubernetes/pull/73033) by [Liujingfang1](https://github.com/Liujingfang1))
 * **kubelet:** Update kubelet overview help doc ([73256](https://github.com/kubernetes/kubernetes/pull/73256) by [deitch](https://github.com/deitch))
-* **kubelet:** kubelet: promote OS &amp;amp; arch labels to GA ([73333](https://github.com/kubernetes/kubernetes/pull/73333) by [yujuhong](https://github.com/yujuhong))
+* **kubelet:** kubelet: promote OS & arch labels to GA ([73333](https://github.com/kubernetes/kubernetes/pull/73333) by [yujuhong](https://github.com/yujuhong))
 * fix typo ([73898](https://github.com/kubernetes/kubernetes/pull/73898) by [xiezongzhe](https://github.com/xiezongzhe))
 
 BUGS
@@ -30,4 +30,3 @@ BUGS
 * **kubelet:** Kubelet: add usageNanoCores from CRI stats provider ([73659](https://github.com/kubernetes/kubernetes/pull/73659) by [feiskyer](https://github.com/feiskyer))
 * **kubelet:** Make container create, start, and stop events consistent ([73892](https://github.com/kubernetes/kubernetes/pull/73892) by [smarterclayton](https://github.com/smarterclayton))
 * **kubelet:** cpuPeriod was not reset ([73342](https://github.com/kubernetes/kubernetes/pull/73342) by [szuecs](https://github.com/szuecs))
----

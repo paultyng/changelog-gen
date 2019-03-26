@@ -17,27 +17,27 @@
 BREAKING CHANGES
 
 {{range $breaking | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $features) 0}}
 FEATURES
 
 {{range $features | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $improvements) 0}}
 IMPROVEMENTS
 
 {{range $improvements | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $bugs) 0}}
 BUGS
 
 {{range $bugs | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}

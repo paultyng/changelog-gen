@@ -7,7 +7,7 @@ import (
 	"github.com/Masterminds/sprig"
 )
 
-const defaultReleaseNoteTemplate = `{{with .Labels | filterPrefix "service/" true | sortAlpha }}{{if len . | lt 0 }}**{{. | join ", " }}:** {{end}}{{end}}{{.Text}} ([{{.PRNumber}}]({{.PRURL}}) by [{{.Author}}]({{.AuthorURL}}))`
+const defaultReleaseNoteTemplate = `{{with .Labels | filterPrefix "service/" true | sortAlpha }}{{if len . | lt 0 }}**{{. | join ", " }}:** {{end}}{{end}}{{.Text | raw}} ([{{.PRNumber}}]({{.PRURL}}) by [{{.Author}}]({{.AuthorURL}}))`
 const defaultChangelogTemplate = `
 {{- $breaking := newStringList -}}
 {{- $features := newStringList -}}
@@ -28,28 +28,28 @@ const defaultChangelogTemplate = `
 BREAKING CHANGES
 
 {{range $breaking | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $features) 0}}
 FEATURES
 
 {{range $features | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $improvements) 0}}
 IMPROVEMENTS
 
 {{range $improvements | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 {{- if gt (len $bugs) 0}}
 BUGS
 
 {{range $bugs | sortAlpha -}}
-* {{.}}
+* {{. | raw}}
 {{end -}}
 {{- end -}}
 `
@@ -72,9 +72,13 @@ func newStringList() []string {
 	return make([]string, 0)
 }
 
-func renderReleaseNoteFunc(templateText string) func(ReleaseNote) (string, error) {
-	return func(note ReleaseNote) (string, error) {
-		return render(templateText, note, nil)
+func renderReleaseNoteFunc(templateText string) func(ReleaseNote) (template.HTML, error) {
+	return func(note ReleaseNote) (template.HTML, error) {
+		raw, err := render(templateText, note, nil)
+		if err != nil {
+			return "", err
+		}
+		return template.HTML(raw), nil
 	}
 }
 
@@ -96,6 +100,9 @@ func render(templateText string, data interface{}, additionalFuncs template.Func
 	}
 	funcs["filterPrefix"] = filterPrefix
 	funcs["newStringList"] = newStringList
+	funcs["raw"] = func(s string) template.HTML {
+		return template.HTML(s)
+	}
 
 	tmpl = tmpl.Funcs(funcs)
 
