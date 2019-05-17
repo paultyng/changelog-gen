@@ -20,10 +20,10 @@ import (
 type options struct {
 	// required
 	githubToken string
-	owner       string
-	repo        string
 
 	// optional
+	owner               string
+	repo                string
 	branch              string
 	changelogTemplate   string
 	releaseNoteTemplate string
@@ -60,7 +60,7 @@ func parseOptions(args []string) ([]string, *options, error) {
 
 		flBranch = flagset.String(
 			"branch",
-			envString("GITHUB_BRANCH", "master"),
+			envString("GITHUB_BRANCH", ""),
 			"Github branch (defaults to master)",
 		)
 
@@ -85,19 +85,11 @@ func parseOptions(args []string) ([]string, *options, error) {
 		return nil, nil, errors.New("GitHub token must be set via -github-token or $GITHUB_TOKEN")
 	}
 
-	if *flOwner == "" {
-		return nil, nil, errors.New("GitHub repository owner must be set via -owner or $GITHUB_OWNER")
-	}
-
-	if *flRepo == "" {
-		return nil, nil, errors.New("GitHub repository must be set via -repo or $GITHUB_REPO")
-	}
-
 	return flagset.Args(), &options{
 		githubToken: *flGitHubToken,
-		owner:       *flOwner,
-		repo:        *flRepo,
 
+		owner:               *flOwner,
+		repo:                *flRepo,
 		branch:              *flBranch,
 		changelogTemplate:   *flChangelogTemplate,
 		releaseNoteTemplate: *flReleaseNoteTemplate,
@@ -130,6 +122,15 @@ func loadTemplate(filename string) (string, error) {
 	return string(content), nil
 }
 
+func coalesce(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
 func main() {
 	logger := hclog.New(&hclog.LoggerOptions{
 		// TODO: load level from somewhere else?
@@ -143,12 +144,30 @@ func main() {
 			return err
 		}
 		if len(args) != 2 {
+			// TODO: use most recent tag if nothing passed
+			// ie. git describe --tags --abbrev=0
+			// like goreleaser, for current commit
 			return errors.New("2 arguments are required")
 		}
 
-		branch := opts.branch
-		if branch == "" {
-			branch = "master"
+		wd, err := os.Getwd()
+		if err != nil {
+			// TODO: ignore this and skip the git stuff?
+			return err
+		}
+
+		gitOwner, gitRepo, gitBranch, err := parseGitWD(wd, "origin")
+		if err != nil {
+			// TODO: ignore this?
+			return err
+		}
+
+		owner := coalesce(opts.owner, gitOwner)
+		repo := coalesce(opts.repo, gitRepo)
+		branch := coalesce(opts.branch, gitBranch, "master")
+
+		if owner == "" || repo == "" {
+			return errors.New("you must provide an owner and repository or run the tool inside a git repo with the proper origin set")
 		}
 
 		changelogTemplate, err := loadTemplate(opts.changelogTemplate)
@@ -161,6 +180,8 @@ func main() {
 			return err
 		}
 
+		logger.Info("parsing commits", "owner", owner, "repo", repo, "branch", branch)
+
 		ctx := context.Background()
 		client := githubClient(ctx, opts.githubToken)
 
@@ -169,7 +190,7 @@ func main() {
 			return err
 		}
 		if startCommit != "" {
-			startTime, err = changelog.TimeFromCommit(ctx, client, opts.owner, opts.repo, startCommit)
+			startTime, err = changelog.TimeFromCommit(ctx, client, owner, repo, startCommit)
 			if err != nil {
 				return err
 			}
@@ -180,7 +201,7 @@ func main() {
 			return err
 		}
 		if endCommit != "" {
-			endTime, err = changelog.TimeFromCommit(ctx, client, opts.owner, opts.repo, endCommit)
+			endTime, err = changelog.TimeFromCommit(ctx, client, owner, repo, endCommit)
 			if err != nil {
 				return err
 			}
@@ -189,7 +210,7 @@ func main() {
 		cl, err := changelog.BuildChangelog(
 			ctx, client, logger,
 			changelogTemplate, releaseNoteTemplate,
-			opts.owner, opts.repo, branch,
+			owner, repo, branch,
 			startTime, endTime,
 		)
 		if err != nil {
