@@ -27,6 +27,7 @@ type options struct {
 	branch              string
 	changelogTemplate   string
 	releaseNoteTemplate string
+	labelPrefix         string
 }
 
 func envString(key, def string) string {
@@ -75,6 +76,12 @@ func parseOptions(args []string) ([]string, *options, error) {
 			"",
 			"Release note template path (leave blank for built-in template)",
 		)
+
+		flLabelPrefix = flagset.String(
+			"label-prefix",
+			"",
+			"Prefix for filtering changelog-related labels; text after prefix is used to determine category",
+		)
 	)
 
 	if err := flagset.Parse(args); err != nil {
@@ -101,6 +108,7 @@ func parseOptions(args []string) ([]string, *options, error) {
 		branch:              *flBranch,
 		changelogTemplate:   *flChangelogTemplate,
 		releaseNoteTemplate: *flReleaseNoteTemplate,
+		labelPrefix:         *flLabelPrefix,
 	}, nil
 }
 
@@ -188,8 +196,12 @@ func main() {
 
 		cl, err := changelog.BuildChangelog(
 			ctx, client, logger,
-			changelogTemplate, releaseNoteTemplate,
-			opts.owner, opts.repo, branch,
+			changelogTemplate,
+			releaseNoteTemplate,
+			opts.owner,
+			opts.repo,
+			branch,
+			opts.labelPrefix,
 			startTime, endTime,
 		)
 		if err != nil {

@@ -46,16 +46,17 @@ func BuildChangelog(
 	changelogTemplate,
 	releaseNoteTemplate,
 	owner, repo, branch string,
+	labelPrefix string,
 	start, end time.Time,
 ) (string, error) {
-	prIDs, err := listPullRequestIDs(ctx, client, logger, owner, repo, branch, start, end)
+	prIDs, err := listPullRequestIDs(ctx, client, logger, owner, repo, branch, labelPrefix, start, end)
 	if err != nil {
 		return "", err
 	}
 
 	logger.Info("found PRs", "count", len(prIDs))
 
-	notes, err := pullRequestsToReleaseNotes(ctx, client, logger, prIDs)
+	notes, err := pullRequestsToReleaseNotes(ctx, client, logger, prIDs, labelPrefix)
 	if err != nil {
 		return "", err
 	}

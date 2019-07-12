@@ -57,6 +57,7 @@ func listPullRequestIDs(
 	client *githubv4.Client,
 	logger hclog.Logger,
 	owner, repo, branch string,
+	labelPrefix string,
 	start, end time.Time,
 ) ([]string, error) {
 	var q struct {
@@ -134,7 +135,7 @@ func listPullRequestIDs(
 			noChangelog := false
 			for _, ln := range prn.Labels.Nodes {
 				for _, nrn := range labelsNoReleaseNote {
-					if ln.Name == nrn {
+					if strings.TrimPrefix(ln.Name, labelPrefix) == nrn {
 						noChangelog = true
 						break
 					}
@@ -176,6 +177,7 @@ func pullRequestsToReleaseNotes(
 	client *githubv4.Client,
 	logger hclog.Logger,
 	prIDs []string,
+	labelPrefix string,
 ) ([]ReleaseNote, error) {
 	var q struct {
 		Nodes []struct {
@@ -229,13 +231,17 @@ func pullRequestsToReleaseNotes(
 		}
 
 		for _, ln := range n.PullRequest.Labels.Nodes {
+			if !strings.HasPrefix(ln.Name, labelPrefix) {
+				continue
+			}
+			label := strings.TrimPrefix(ln.Name, labelPrefix)
 			switch {
-			case stringInSlice(labelsBug, ln.Name):
+			case stringInSlice(labelsBug, label):
 				note.Bug = true
-			case ln.Name == labelBreakingChange:
+			case label == labelBreakingChange:
 				note.BreakingChange = true
 			default:
-				note.Labels = append(note.Labels, ln.Name)
+				note.Labels = append(note.Labels, label)
 			}
 		}
 
@@ -246,8 +252,8 @@ func pullRequestsToReleaseNotes(
 }
 
 var textInBodyREs = []*regexp.Regexp{
-	regexp.MustCompile("(?m)^```release-note\n(?P<note>.+)\n```"),
-	regexp.MustCompile("(?m)^```releasenote\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```release-note\\s*\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```releasenote\\s*\n(?P<note>.+)\n```"),
 }
 
 func textFromPR(title, body string) string {
