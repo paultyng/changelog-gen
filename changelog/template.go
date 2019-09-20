@@ -54,6 +54,52 @@ BUGS
 {{- end -}}
 `
 
+const defaultBlockTypeChangelogTemplate = `
+{{- $breaking := newStringList -}}
+{{- $features := newStringList -}}
+{{- $improvements := newStringList -}}
+{{- $bugs := newStringList -}}
+{{- range . -}}
+  {{if eq "breaking-change" .Type -}}
+	{{$breaking = append $breaking (renderReleaseNote .) -}}
+  {{else if or (eq "new-resource" .Type) (eq "new-data-source" .Type) (eq "feature" .Type) -}}
+	{{$features = append $features (renderReleaseNote .) -}}
+  {{else if eq "improvement" .Type -}}
+	{{$improvements = append $improvements (renderReleaseNote .) -}}
+  {{else if eq "bug" .Type -}}
+	{{$bugs = append $bugs (renderReleaseNote .) -}}
+  {{end -}}
+{{- end -}}
+{{- if gt (len $breaking) 0 -}}
+BREAKING CHANGES
+
+{{range $breaking | sortAlpha -}}
+* {{. }}
+{{end -}}
+{{- end -}}
+{{- if gt (len $features) 0}}
+FEATURES
+
+{{range $features | sortAlpha -}}
+* {{. }}
+{{end -}}
+{{- end -}}
+{{- if gt (len $improvements) 0}}
+IMPROVEMENTS
+
+{{range $improvements | sortAlpha -}}
+* {{. }}
+{{end -}}
+{{- end -}}
+{{- if gt (len $bugs) 0}}
+BUGS
+
+{{range $bugs | sortAlpha -}}
+* {{. }}
+{{end -}}
+{{- end -}}
+`
+
 func filterPrefix(prefix string, trim bool, data []string) []string {
 	result := []string{}
 	for _, s := range data {

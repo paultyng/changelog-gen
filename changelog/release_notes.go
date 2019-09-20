@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -50,6 +51,14 @@ type ReleaseNote struct {
 	// BreakingChange indicates if this change was breaking (the
 	// `breaking-change` label was applied to the PR).
 	BreakingChange bool `json:"breaking_change,omitempty"`
+
+	// Type is the type of entry the ReleaseNote is
+	Type string
+}
+
+type releaseNoteEntry struct {
+	Type string
+	Text string
 }
 
 func listPullRequestIDs(
@@ -225,7 +234,6 @@ func pullRequestsToReleaseNotes(
 			PRURL:     n.PullRequest.URL,
 			Author:    author,
 			AuthorURL: authorURL,
-			Text:      textFromPR(n.PullRequest.Title, n.PullRequest.Body),
 		}
 
 		for _, ln := range n.PullRequest.Labels.Nodes {
@@ -239,7 +247,12 @@ func pullRequestsToReleaseNotes(
 			}
 		}
 
-		notes = append(notes, note)
+		for _, entry := range releaseNoteBlocks(n.PullRequest.Title, n.PullRequest.Body) {
+			n := note
+			n.Text = entry.Text
+			n.Type = entry.Type
+			notes = append(notes, n)
+		}
 	}
 
 	return notes, nil
@@ -248,35 +261,67 @@ func pullRequestsToReleaseNotes(
 var textInBodyREs = []*regexp.Regexp{
 	regexp.MustCompile("(?m)^```release-note\n(?P<note>.+)\n```"),
 	regexp.MustCompile("(?m)^```releasenote\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```release-note:(?P<type>[^\n]*)\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```releasenote:(?P<type>[^\n]*)\n(?P<note>.+)\n```"),
 }
 
-func textFromPR(title, body string) string {
-	text := title
+func releaseNoteBlocks(title, body string) []releaseNoteEntry {
+	var res []releaseNoteEntry
 	for _, re := range textInBodyREs {
-		match := re.FindStringSubmatch(body)
-		if len(match) == 0 {
+		matches := re.FindAllStringSubmatch(body, -1)
+		if len(matches) == 0 {
 			continue
 		}
 
-		note := ""
-		for i, name := range re.SubexpNames() {
-			if name == "note" {
-				note = match[i]
-				break
+		for _, match := range matches {
+			note := ""
+			typ := ""
+			for i, name := range re.SubexpNames() {
+				switch name {
+				case "note":
+					note = match[i]
+				case "type":
+					typ = match[i]
+				}
+				if note != "" && typ != "" {
+					break
+				}
 			}
-		}
 
-		note = strings.TrimRight(note, "\r")
-		note = stripMarkdownBullet(note)
+			note = strings.TrimRight(note, "\r")
+			note = stripMarkdownBullet(note)
 
-		if note != "" {
-			text = note
+			note = strings.TrimSpace(note)
+			typ = strings.TrimSpace(typ)
+
+			if note == "" {
+				continue
+			}
+
+			res = append(res, releaseNoteEntry{
+				Type: typ,
+				Text: note,
+			})
 		}
 	}
-
-	text = strings.TrimSpace(text)
-
-	return text
+	if len(res) < 1 && title != "" {
+		res = append(res, releaseNoteEntry{
+			Text: title,
+		})
+	}
+	sort.Slice(res, func(i, j int) bool {
+		if res[i].Type < res[j].Type {
+			return true
+		} else if res[j].Type < res[i].Type {
+			return false
+		} else if res[i].Text < res[j].Text {
+			return true
+		} else if res[j].Text < res[i].Text {
+			return false
+		}
+		return false
+	})
+	return res
 }
 
 func stripMarkdownBullet(note string) string {

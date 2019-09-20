@@ -57,6 +57,51 @@ BUGS
 	assert.Equal(t, expected, actual)
 }
 
+func TestRender_defaultBlockTypeChangelogTemplate(t *testing.T) {
+	expected := `BREAKING CHANGES
+
+* this is a breaking change ([0]() by []())
+
+FEATURES
+
+* this is a new data-source ([0]() by []())
+* this is a new resource ([0]() by []())
+
+IMPROVEMENTS
+
+* this is an improvement & 'stuff' ([0]() by []())
+
+BUGS
+
+* this is a bug ([0]() by []())
+`
+
+	actual, err := renderChangelog(defaultBlockTypeChangelogTemplate, defaultReleaseNoteTemplate, []ReleaseNote{
+		{
+			Type: "breaking-change",
+			Text: "this is a breaking change",
+		},
+		{
+			Type: "new-resource",
+			Text: "this is a new resource",
+		},
+		{
+			Type: "new-data-source",
+			Text: "this is a new data-source",
+		},
+		{
+			Type: "improvement",
+			Text: "this is an improvement & 'stuff'",
+		},
+		{
+			Type: "bug",
+			Text: "this is a bug",
+		},
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+}
+
 func TestRender_defaultReleaseNoteTemplate(t *testing.T) {
 	for i, c := range []struct {
 		expected string
