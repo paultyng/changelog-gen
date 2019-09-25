@@ -56,7 +56,10 @@ type ReleaseNote struct {
 	Type string
 }
 
-type releaseNoteEntry struct {
+// ReleaseNoteEntry is a struct containing the type of entry and the body of
+// the entry. One or more ReleaseNoteEntry is extracted from a PR, and
+// represents a single item within the release notes.
+type ReleaseNoteEntry struct {
 	Type string
 	Text string
 }
@@ -247,7 +250,7 @@ func pullRequestsToReleaseNotes(
 			}
 		}
 
-		for _, entry := range releaseNoteBlocks(n.PullRequest.Title, n.PullRequest.Body) {
+		for _, entry := range ReleaseNoteBlocks(n.PullRequest.Title, n.PullRequest.Body) {
 			n := note
 			n.Text = entry.Text
 			n.Type = entry.Type
@@ -265,8 +268,12 @@ var textInBodyREs = []*regexp.Regexp{
 	regexp.MustCompile("(?m)^```releasenote:(?P<type>[^\n]*)\n(?P<note>.+)\n```"),
 }
 
-func releaseNoteBlocks(title, body string) []releaseNoteEntry {
-	var res []releaseNoteEntry
+// ReleaseNoteBlocks accepts the PR title and body contents, and parses them
+// into one or more `ReleaseNoteEntry`s. It first attempts to find explicit
+// releasenote code blocks within the body, and failing that, falls back on
+// using the PR title as long as it is not empty.
+func ReleaseNoteBlocks(title, body string) []ReleaseNoteEntry {
+	var res []ReleaseNoteEntry
 	for _, re := range textInBodyREs {
 		matches := re.FindAllStringSubmatch(body, -1)
 		if len(matches) == 0 {
@@ -298,14 +305,14 @@ func releaseNoteBlocks(title, body string) []releaseNoteEntry {
 				continue
 			}
 
-			res = append(res, releaseNoteEntry{
+			res = append(res, ReleaseNoteEntry{
 				Type: typ,
 				Text: note,
 			})
 		}
 	}
 	if len(res) < 1 && title != "" {
-		res = append(res, releaseNoteEntry{
+		res = append(res, ReleaseNoteEntry{
 			Text: title,
 		})
 	}

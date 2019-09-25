@@ -10,7 +10,7 @@ import (
 
 func TestTextFromPR(t *testing.T) {
 	for i, c := range []struct {
-		expected []releaseNoteEntry
+		expected []ReleaseNoteEntry
 		title    string
 		body     string
 	}{
@@ -18,22 +18,22 @@ func TestTextFromPR(t *testing.T) {
 		{nil, "", ""},
 
 		// text in title
-		{[]releaseNoteEntry{{Text: "foo"}}, "foo", ""},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "foo", ""},
 
 		// text in body, type in labels
-		{[]releaseNoteEntry{{Text: "foo"}}, "bar", "```release-note\nfoo\n```"},
-		{[]releaseNoteEntry{{Text: "foo"}}, "bar", "```releasenote\nfoo\n```"},
-		{[]releaseNoteEntry{{Text: "foo"}}, "bar", "\n```releasenote\nfoo\n```\n"},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```release-note\nfoo\n```"},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```releasenote\nfoo\n```"},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "\n```releasenote\nfoo\n```\n"},
 
 		// text in title (malformed body)
-		{[]releaseNoteEntry{{Text: "bar"}}, "bar", "\n ```releasenote\nfoo\n```"},
+		{[]ReleaseNoteEntry{{Text: "bar"}}, "bar", "\n ```releasenote\nfoo\n```"},
 
 		// text in body, type in body
-		{[]releaseNoteEntry{{Type: "bug", Text: "foo"}}, "", "```release-note:bug\nfoo\n```"},
-		{[]releaseNoteEntry{{Type: "enhancement", Text: "bar"}}, "", "```releasenote:enhancement\nbar\n```"},
+		{[]ReleaseNoteEntry{{Type: "bug", Text: "foo"}}, "", "```release-note:bug\nfoo\n```"},
+		{[]ReleaseNoteEntry{{Type: "enhancement", Text: "bar"}}, "", "```releasenote:enhancement\nbar\n```"},
 
 		// text in body, type in body, multiple blocks
-		{[]releaseNoteEntry{{Type: "bug", Text: "foo"}, {Type: "enhancement", Text: "bar"}},
+		{[]ReleaseNoteEntry{{Type: "bug", Text: "foo"}, {Type: "enhancement", Text: "bar"}},
 			"", "\n```releasenote:bug\nfoo\n```\n\n```release-note:enhancement\nbar\n```\n"},
 	} {
 		t.Run(fmt.Sprintf("%d %s", i, c.expected), func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestTextFromPR(t *testing.T) {
 				}
 				return false
 			})
-			actual := releaseNoteBlocks(c.title, c.body)
+			actual := ReleaseNoteBlocks(c.title, c.body)
 			assert.Equal(t, res, actual)
 		})
 	}
