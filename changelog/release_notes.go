@@ -295,7 +295,6 @@ func ReleaseNoteBlocks(title, body string) []ReleaseNoteEntry {
 				}
 			}
 
-			note = strings.TrimRight(note, "\r")
 			note = stripMarkdownBullet(note)
 
 			note = strings.TrimSpace(note)
