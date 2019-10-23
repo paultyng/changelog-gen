@@ -45,10 +45,10 @@ func BuildChangelog(
 	logger hclog.Logger,
 	changelogTemplate,
 	releaseNoteTemplate,
-	owner, repo, branch string,
+	owner, repo, branch, noNoteLabel string,
 	start, end time.Time,
 ) (string, error) {
-	prIDs, err := listPullRequestIDs(ctx, client, logger, owner, repo, branch, start, end)
+	prIDs, err := listPullRequestIDs(ctx, client, logger, owner, repo, branch, noNoteLabel, start, end)
 	if err != nil {
 		return "", err
 	}

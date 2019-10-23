@@ -27,6 +27,7 @@ type options struct {
 	branch              string
 	changelogTemplate   string
 	releaseNoteTemplate string
+	noNoteLabel         string
 }
 
 func envString(key, def string) string {
@@ -75,6 +76,12 @@ func parseOptions(args []string) ([]string, *options, error) {
 			"",
 			"Release note template path (leave blank for built-in template)",
 		)
+
+		flNoNoteLabel = flagset.String(
+			"no-note-label",
+			"",
+			"Label to indicate a PR should not generate a release note",
+		)
 	)
 
 	if err := flagset.Parse(args); err != nil {
@@ -101,6 +108,7 @@ func parseOptions(args []string) ([]string, *options, error) {
 		branch:              *flBranch,
 		changelogTemplate:   *flChangelogTemplate,
 		releaseNoteTemplate: *flReleaseNoteTemplate,
+		noNoteLabel:         *flNoNoteLabel,
 	}, nil
 }
 
@@ -190,7 +198,7 @@ func main() {
 			ctx, client, logger,
 			changelogTemplate, releaseNoteTemplate,
 			opts.owner, opts.repo, branch,
-			startTime, endTime,
+			opts.noNoteLabel, startTime, endTime,
 		)
 		if err != nil {
 			panic(err)

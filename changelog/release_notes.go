@@ -68,7 +68,7 @@ func listPullRequestIDs(
 	ctx context.Context,
 	client *githubv4.Client,
 	logger hclog.Logger,
-	owner, repo, branch string,
+	owner, repo, branch, noNoteLabel string,
 	start, end time.Time,
 ) ([]string, error) {
 	var q struct {
@@ -143,17 +143,21 @@ func listPullRequestIDs(
 				continue
 			}
 
-			noChangelog := false
+			noChangelog := ""
 			for _, ln := range prn.Labels.Nodes {
+				if ln.Name == noNoteLabel {
+					noChangelog = noNoteLabel
+					break
+				}
 				for _, nrn := range labelsNoReleaseNote {
 					if ln.Name == nrn {
-						noChangelog = true
+						noChangelog = nrn
 						break
 					}
 				}
 			}
-			if noChangelog {
-				logger.Debug("no-changelog label applied, skipping")
+			if noChangelog != "" {
+				logger.Debug(noChangelog + " label applied, skipping")
 				continue
 			}
 
@@ -234,9 +238,9 @@ func pullRequestsToReleaseNotes(
 		note := ReleaseNote{
 			PRDate:    n.PullRequest.MergedAt,
 			PRNumber:  n.PullRequest.Number,
-			PRURL:     n.PullRequest.URL,
-			Author:    author,
-			AuthorURL: authorURL,
+			PRURL:     strings.TrimSpace(n.PullRequest.URL),
+			Author:    strings.TrimSpace(author),
+			AuthorURL: strings.TrimSpace(authorURL),
 		}
 
 		for _, ln := range n.PullRequest.Labels.Nodes {
