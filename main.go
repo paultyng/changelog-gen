@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	hclog "github.com/hashicorp/go-hclog"
@@ -27,7 +28,7 @@ type options struct {
 	branch              string
 	changelogTemplate   string
 	releaseNoteTemplate string
-	noNoteLabel         string
+	noNoteLabels        []string
 }
 
 func envString(key, def string) string {
@@ -37,8 +38,20 @@ func envString(key, def string) string {
 	return def
 }
 
+type stringSliceFlag []string
+
+func (s *stringSliceFlag) String() string {
+	return strings.Join([]string(*s), ", ")
+}
+
+func (s *stringSliceFlag) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
+
 func parseOptions(args []string) ([]string, *options, error) {
 	flagset := flag.NewFlagSet("changelog-gen", flag.ExitOnError)
+	var flNoNoteLabel stringSliceFlag
 
 	var (
 		flGitHubToken = flagset.String(
@@ -76,12 +89,10 @@ func parseOptions(args []string) ([]string, *options, error) {
 			"",
 			"Release note template path (leave blank for built-in template)",
 		)
-
-		flNoNoteLabel = flagset.String(
-			"no-note-label",
-			"",
-			"Label to indicate a PR should not generate a release note",
-		)
+	)
+	flagset.Var(&flNoNoteLabel,
+		"no-note-label",
+		"Label to indicate a PR should not generate a release note (can be set multiple times to match multiple labels)",
 	)
 
 	if err := flagset.Parse(args); err != nil {
@@ -100,6 +111,10 @@ func parseOptions(args []string) ([]string, *options, error) {
 		return nil, nil, errors.New("GitHub repository must be set via -repo or $GITHUB_REPO")
 	}
 
+	if len(flNoNoteLabel) < 1 {
+		flNoNoteLabel = append(flNoNoteLabel, "no-release-note", "release-note-none")
+	}
+
 	return flagset.Args(), &options{
 		githubToken: *flGitHubToken,
 		owner:       *flOwner,
@@ -108,7 +123,7 @@ func parseOptions(args []string) ([]string, *options, error) {
 		branch:              *flBranch,
 		changelogTemplate:   *flChangelogTemplate,
 		releaseNoteTemplate: *flReleaseNoteTemplate,
-		noNoteLabel:         *flNoNoteLabel,
+		noNoteLabels:        []string(flNoNoteLabel),
 	}, nil
 }
 
@@ -198,7 +213,7 @@ func main() {
 			ctx, client, logger,
 			changelogTemplate, releaseNoteTemplate,
 			opts.owner, opts.repo, branch,
-			opts.noNoteLabel, startTime, endTime,
+			opts.noNoteLabels, startTime, endTime,
 		)
 		if err != nil {
 			panic(err)

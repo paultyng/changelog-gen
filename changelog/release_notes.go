@@ -17,8 +17,7 @@ const (
 )
 
 var (
-	labelsBug           = []string{"bug", "kind/bug"}
-	labelsNoReleaseNote = []string{"no-release-note", "release-note-none"}
+	labelsBug = []string{"bug", "kind/bug"}
 )
 
 // ReleaseNote is the type that represents the total sum of all the information
@@ -68,7 +67,7 @@ func listPullRequestIDs(
 	ctx context.Context,
 	client *githubv4.Client,
 	logger hclog.Logger,
-	owner, repo, branch, noNoteLabel string,
+	owner, repo, branch string, noNoteLabels []string,
 	start, end time.Time,
 ) ([]string, error) {
 	var q struct {
@@ -145,11 +144,7 @@ func listPullRequestIDs(
 
 			noChangelog := ""
 			for _, ln := range prn.Labels.Nodes {
-				if ln.Name == noNoteLabel {
-					noChangelog = noNoteLabel
-					break
-				}
-				for _, nrn := range labelsNoReleaseNote {
+				for _, nrn := range noNoteLabels {
 					if ln.Name == nrn {
 						noChangelog = nrn
 						break
