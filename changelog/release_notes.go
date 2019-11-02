@@ -17,8 +17,7 @@ const (
 )
 
 var (
-	labelsBug           = []string{"bug", "kind/bug"}
-	labelsNoReleaseNote = []string{"no-release-note", "release-note-none"}
+	labelsBug = []string{"bug", "kind/bug"}
 )
 
 // ReleaseNote is the type that represents the total sum of all the information
@@ -68,7 +67,7 @@ func listPullRequestIDs(
 	ctx context.Context,
 	client *githubv4.Client,
 	logger hclog.Logger,
-	owner, repo, branch string,
+	owner, repo, branch string, noNoteLabels []string,
 	start, end time.Time,
 ) ([]string, error) {
 	var q struct {
@@ -143,17 +142,17 @@ func listPullRequestIDs(
 				continue
 			}
 
-			noChangelog := false
+			noChangelog := ""
 			for _, ln := range prn.Labels.Nodes {
-				for _, nrn := range labelsNoReleaseNote {
+				for _, nrn := range noNoteLabels {
 					if ln.Name == nrn {
-						noChangelog = true
+						noChangelog = nrn
 						break
 					}
 				}
 			}
-			if noChangelog {
-				logger.Debug("no-changelog label applied, skipping")
+			if noChangelog != "" {
+				logger.Debug(noChangelog + " label applied, skipping")
 				continue
 			}
 
@@ -234,9 +233,9 @@ func pullRequestsToReleaseNotes(
 		note := ReleaseNote{
 			PRDate:    n.PullRequest.MergedAt,
 			PRNumber:  n.PullRequest.Number,
-			PRURL:     n.PullRequest.URL,
-			Author:    author,
-			AuthorURL: authorURL,
+			PRURL:     strings.TrimSpace(n.PullRequest.URL),
+			Author:    strings.TrimSpace(author),
+			AuthorURL: strings.TrimSpace(authorURL),
 		}
 
 		for _, ln := range n.PullRequest.Labels.Nodes {
