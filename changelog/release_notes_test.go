@@ -35,6 +35,16 @@ func TestTextFromPR(t *testing.T) {
 		// text in body, type in body, multiple blocks
 		{[]ReleaseNoteEntry{{Type: "bug", Text: "foo"}, {Type: "enhancement", Text: "bar"}},
 			"", "\n```releasenote:bug\nfoo\n```\n\n```release-note:enhancement\nbar\n```\n"},
+
+		// text in body, no note
+		{[]ReleaseNoteEntry{{Type: "none", Text: ""}}, "", "```release-note:none\n\n```"},
+		{[]ReleaseNoteEntry{{Type: "none", Text: ""}}, "", "```releasenote:none\n\n```"},
+		{[]ReleaseNoteEntry{{Type: "none", Text: ""}}, "", "```release-note:none\n```"},
+		{[]ReleaseNoteEntry{{Type: "none", Text: ""}}, "", "```releasenote:none\n```"},
+
+		// text in body, no type, no note
+		{nil, "", "```release-note\n\n```"},
+		{nil, "", "```release-note\n```"},
 	} {
 		t.Run(fmt.Sprintf("%d %s", i, c.expected), func(t *testing.T) {
 			res := c.expected

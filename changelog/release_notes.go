@@ -261,10 +261,10 @@ func pullRequestsToReleaseNotes(
 }
 
 var textInBodyREs = []*regexp.Regexp{
-	regexp.MustCompile("(?m)^```release-note\n(?P<note>.+)\n```"),
-	regexp.MustCompile("(?m)^```releasenote\n(?P<note>.+)\n```"),
-	regexp.MustCompile("(?m)^```release-note:(?P<type>[^\n]*)\n(?P<note>.+)\n```"),
-	regexp.MustCompile("(?m)^```releasenote:(?P<type>[^\n]*)\n(?P<note>.+)\n```"),
+	regexp.MustCompile("(?m)^```release-note\n(?P<note>.*)\n?```"),
+	regexp.MustCompile("(?m)^```releasenote\n(?P<note>.*)\n?```"),
+	regexp.MustCompile("(?m)^```release-note:(?P<type>.*)\n?(?P<note>.*)\n?```"),
+	regexp.MustCompile("(?m)^```releasenote:(?P<type>.*)\n?(?P<note>.*)\n?```"),
 }
 
 // ReleaseNoteBlocks accepts the PR title and body contents, and parses them
@@ -299,7 +299,7 @@ func ReleaseNoteBlocks(title, body string) []ReleaseNoteEntry {
 			note = strings.TrimSpace(note)
 			typ = strings.TrimSpace(typ)
 
-			if note == "" {
+			if note == "" && typ == "" {
 				continue
 			}
 
