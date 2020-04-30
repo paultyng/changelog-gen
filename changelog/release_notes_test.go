@@ -24,9 +24,14 @@ func TestTextFromPR(t *testing.T) {
 		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```release-note\nfoo\n```"},
 		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```releasenote\nfoo\n```"},
 		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "\n```releasenote\nfoo\n```\n"},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```release-notes\nfoo\n```"},
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```releasenotes\nfoo\n```"},
 
 		// text in title (malformed body)
 		{[]ReleaseNoteEntry{{Text: "bar"}}, "bar", "\n ```releasenote\nfoo\n```"},
+
+		// empty type
+		{[]ReleaseNoteEntry{{Text: "foo"}}, "bar", "```release-note:\nfoo\n```"},
 
 		// text in body, type in body
 		{[]ReleaseNoteEntry{{Type: "bug", Text: "foo"}}, "", "```release-note:bug\nfoo\n```"},
