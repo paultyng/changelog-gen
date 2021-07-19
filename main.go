@@ -29,6 +29,7 @@ type options struct {
 	changelogTemplate   string
 	releaseNoteTemplate string
 	noNoteLabels        []string
+	excludeStart        bool
 }
 
 func envString(key, def string) string {
@@ -89,6 +90,12 @@ func parseOptions(args []string) ([]string, *options, error) {
 			"",
 			"Release note template path (leave blank for built-in template)",
 		)
+
+		flExcludeStart = flagset.Bool(
+			"exclude-start",
+			false,
+			"Exclude start commit from changelog (defaults to false)",
+		)
 	)
 	flagset.Var(&flNoNoteLabel,
 		"no-note-label",
@@ -124,6 +131,7 @@ func parseOptions(args []string) ([]string, *options, error) {
 		changelogTemplate:   *flChangelogTemplate,
 		releaseNoteTemplate: *flReleaseNoteTemplate,
 		noNoteLabels:        []string(flNoNoteLabel),
+		excludeStart:        *flExcludeStart,
 	}, nil
 }
 
@@ -196,6 +204,10 @@ func main() {
 			if err != nil {
 				return err
 			}
+		}
+
+		if opts.excludeStart {
+			startTime = startTime.Add(time.Second)
 		}
 
 		endCommit, endTime, err := parseCommitOrTime(args[1])

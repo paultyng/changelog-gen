@@ -24,6 +24,7 @@ The following flags are supported:
 * **-changelog** Go template for changelog generation. The model is a slice of `ReleaseNote`.
 * **-releasenote** Go template for an individual release note. The model is a single `ReleaseNote`.
 * **-no-note-label** A label that indicates PRs should not create a release note. This option may be specified multiple times, once per each label. Defaults to `no-release-note` and `release-note-none`.
+* **-exclude-start** Exclude start commit from the generated changelog.
 
 In addition to flags you must also supply either 2 commit shas or 2 RFC3339 timestamps indicating the portion of the commit log to pull PRs for.
 
